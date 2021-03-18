@@ -1,11 +1,12 @@
-package client
+package feather
 
 import (
-	"github.com/enorith/supports/reflection"
-	jsoniter "github.com/json-iterator/go"
 	"net/http"
 	"reflect"
 	"strings"
+
+	"github.com/enorith/supports/reflection"
+	jsoniter "github.com/json-iterator/go"
 )
 
 var typeResponse reflect.Type

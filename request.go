@@ -1,11 +1,12 @@
-package client
+package feather
 
 import (
 	"errors"
-	"github.com/enorith/container"
 	"net/http"
 	"reflect"
 	"time"
+
+	"github.com/enorith/container"
 )
 
 const (
@@ -107,6 +108,6 @@ func newPendingRequest(req *http.Request, handler Handler) *PendingRequest {
 		handler:    handler,
 		request:    req,
 		resultChan: make(chan *Result, 1),
-		container: container.New(),
+		container:  container.New(),
 	}
 }

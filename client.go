@@ -1,14 +1,15 @@
-package client
+package feather
 
 import (
 	"bytes"
 	"fmt"
-	jsoniter "github.com/json-iterator/go"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 const (
