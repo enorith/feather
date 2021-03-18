@@ -1,1 +1,1 @@
-# Feather an golang http client
+# Feather is a golang http client
