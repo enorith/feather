@@ -2,6 +2,8 @@ package feather
 
 import (
 	"errors"
+	jsoniter "github.com/json-iterator/go"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 	"time"
@@ -19,8 +21,35 @@ const (
 type ErrorHandler func(error)
 
 type Result struct {
-	Response *http.Response
-	Err      error
+	Response    *http.Response
+	Err         error
+	content     []byte
+	contentRead bool
+}
+
+func (r *Result) Content() []byte {
+	if r.contentRead {
+		return r.content
+	}
+	if r.Err != nil {
+		return nil
+	}
+
+	b, _ := ioutil.ReadAll(r.Response.Body)
+	defer r.Response.Body.Close()
+	return b
+}
+
+func (r *Result) ContentString() string {
+	return string(r.Content())
+}
+
+func (r *Result) Unmarshal(v interface{}) error {
+	if r.Err != nil {
+		return errors.New("unmarshal error response")
+	}
+
+	return jsoniter.Unmarshal(r.Content(), v)
 }
 
 type PendingRequest struct {
@@ -98,9 +127,19 @@ func (pr *PendingRequest) Wait() *Result {
 	}
 
 	pr.result = <-pr.resultChan
+	if pr.result.Err == nil {
+		pr.state = stateSuccess
+	} else {
+		pr.state = stateFailed
+	}
 	pr.container.WithInjector(&responseInjector{resp: pr.result.Response})
 
 	return pr.result
+}
+
+func (pr *PendingRequest) IsSuccess() bool {
+	pr.Wait()
+	return pr.state == stateSuccess
 }
 
 func newPendingRequest(req *http.Request, handler Handler) *PendingRequest {

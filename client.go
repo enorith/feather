@@ -14,6 +14,7 @@ import (
 
 const (
 	DefaultTimeout = 5 * time.Second
+	NoneProxy      = "none"
 )
 
 var defaultClient *http.Client
@@ -26,8 +27,25 @@ func defaultHandler(opt Options) Handler {
 
 func clientFromOptions(o Options) *http.Client {
 	if defaultClient == nil {
+		var rt http.RoundTripper
+
+		if len(o.ProxyUrl) > 0 {
+			if o.ProxyUrl == NoneProxy {
+				rt = &http.Transport{}
+			} else {
+				pu, e := url.Parse(o.ProxyUrl)
+				if e != nil {
+					rt = &http.Transport{
+						Proxy: http.ProxyURL(pu),
+					}
+				}
+			}
+
+		}
+
 		defaultClient = &http.Client{
-			Timeout: o.Timeout,
+			Timeout:   o.Timeout,
+			Transport: rt,
 		}
 	}
 
@@ -49,8 +67,9 @@ type (
 		opt Options
 	}
 	Options struct {
-		BaseUri string
-		Timeout time.Duration
+		BaseUri  string
+		Timeout  time.Duration
+		ProxyUrl string
 	}
 )
 
