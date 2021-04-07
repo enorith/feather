@@ -9,7 +9,7 @@ import (
 func TestClientRequest(t *testing.T) {
 	c := feather.NewClient()
 
-	pr, e := c.Get("http://www.baidu.com")
+	pr, e := c.Get("https://www.baidu.com")
 	if e != nil {
 		t.Fatalf("request error %v", e)
 	}
@@ -18,7 +18,7 @@ func TestClientRequest(t *testing.T) {
 }
 
 func TestClientRequestProxy(t *testing.T) {
-	c := feather.NewClient(feather.Options{ProxyUrl: "socks5://127.0.0.1:7890"})
+	c := feather.NewClient(feather.Options{ProxyUrl: "http://127.0.0.1:7890"})
 
 	pr, e := c.Get("https://www.google.com")
 	if e != nil {
@@ -38,7 +38,7 @@ type Result struct {
 }
 
 func TestClientUnmarshalBody(t *testing.T) {
-	c := feather.NewClient(feather.Options{ProxyUrl: "none"})
+	c := feather.NewClient(feather.Options{ProxyUrl: feather.NoneProxy})
 
 	pr, e := c.Get("http://ubuntu:4161/lookup", feather.RequestOptions{
 		Query: map[string][]string{

@@ -34,7 +34,7 @@ func clientFromOptions(o Options) *http.Client {
 				rt = &http.Transport{}
 			} else {
 				pu, e := url.Parse(o.ProxyUrl)
-				if e != nil {
+				if e == nil {
 					rt = &http.Transport{
 						Proxy: http.ProxyURL(pu),
 					}

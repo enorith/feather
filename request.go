@@ -2,11 +2,12 @@ package feather
 
 import (
 	"errors"
-	jsoniter "github.com/json-iterator/go"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/enorith/container"
 )
@@ -111,7 +112,7 @@ func (pr *PendingRequest) Then(cb interface{}) error {
 		}
 	}
 
-	return nil
+	return result.Err
 }
 
 func (pr *PendingRequest) Catch(cb ErrorHandler) {
