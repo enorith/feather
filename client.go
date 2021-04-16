@@ -17,39 +17,37 @@ const (
 	NoneProxy      = "none"
 )
 
-var defaultClient *http.Client
-
 func defaultHandler(opt Options) Handler {
-	return func(r *http.Request) (*http.Response, error) {
-		return clientFromOptions(opt).Do(r)
+	return func(r *http.Request) *Result {
+		resp, err := clientFromOptions(opt).Do(r)
+		return &Result{
+			Response: resp,
+			Err:      err,
+		}
 	}
 }
 
 func clientFromOptions(o Options) *http.Client {
-	if defaultClient == nil {
-		var rt http.RoundTripper
+	var rt http.RoundTripper
 
-		if len(o.ProxyUrl) > 0 {
-			if o.ProxyUrl == NoneProxy {
-				rt = &http.Transport{}
-			} else {
-				pu, e := url.Parse(o.ProxyUrl)
-				if e == nil {
-					rt = &http.Transport{
-						Proxy: http.ProxyURL(pu),
-					}
+	if len(o.ProxyUrl) > 0 {
+		if o.ProxyUrl == NoneProxy {
+			rt = &http.Transport{}
+		} else {
+			pu, e := url.Parse(o.ProxyUrl)
+			if e == nil {
+				rt = &http.Transport{
+					Proxy: http.ProxyURL(pu),
 				}
 			}
-
 		}
 
-		defaultClient = &http.Client{
-			Timeout:   o.Timeout,
-			Transport: rt,
-		}
 	}
 
-	return defaultClient
+	return &http.Client{
+		Timeout:   o.Timeout,
+		Transport: rt,
+	}
 }
 
 type (
@@ -67,9 +65,10 @@ type (
 		opt Options
 	}
 	Options struct {
-		BaseUri  string
-		Timeout  time.Duration
-		ProxyUrl string
+		BaseUri        string
+		Timeout        time.Duration
+		ProxyUrl       string
+		ErrorUnsuccess bool
 	}
 )
 
@@ -106,8 +105,19 @@ func (c *Client) Request(method, path string, opts ...RequestOptions) (*PendingR
 	if e != nil {
 		return nil, e
 	}
+	if c.opt.ErrorUnsuccess {
+		c.Interceptor(func(r *http.Request, next Handler) *Result {
+			result := next(r)
 
-	return newPendingRequest(req, func(r *http.Request) (*http.Response, error) {
+			if result.Err == nil && result.Response.StatusCode != 200 {
+				result.Err = UnsuccessError{result}
+				return result
+			}
+
+			return result
+		})
+	}
+	return newPendingRequest(req, func(r *http.Request) *Result {
 		return c.p.Resolve(r, o.Handler)
 	}).do(), nil
 }
@@ -184,4 +194,12 @@ func mergeValues(val, val1 map[string][]string) map[string][]string {
 	}
 
 	return val
+}
+
+type UnsuccessError struct {
+	*Result
+}
+
+func (ue UnsuccessError) Error() string {
+	return http.StatusText(ue.Response.StatusCode)
 }
