@@ -92,16 +92,16 @@ func (c *Client) Delete(url string, opts ...RequestOptions) (*PendingRequest, er
 	return c.Request(http.MethodDelete, url, opts...)
 }
 
-func (c *Client) Request(method, path string, opts ...RequestOptions) (*PendingRequest, error) {
+func (c *Client) Request(method, url string, opts ...RequestOptions) (*PendingRequest, error) {
 	if len(c.opt.BaseUri) > 0 {
-		path = fmt.Sprintf("%s/%s", strings.TrimSuffix(c.opt.BaseUri, "/"), strings.TrimPrefix(path, "/"))
+		url = fmt.Sprintf("%s/%s", strings.TrimSuffix(c.opt.BaseUri, "/"), strings.TrimPrefix(url, "/"))
 	}
 	o, err := requestOptions(c.opt, opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	req, e := NewRequestFromOptions(method, path, o)
+	req, e := NewRequestFromOptions(method, url, o)
 	if e != nil {
 		return nil, e
 	}
@@ -174,6 +174,10 @@ func (c *Client) Interceptor(pf PipeFunc) *Client {
 	c.p = c.p.Push(pf)
 
 	return c
+}
+
+func (c *Client) Config(opt Options) *Client {
+	return NewClient(opt) // return new client
 }
 
 func NewClient(opts ...Options) *Client {

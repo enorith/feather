@@ -8,9 +8,8 @@ import (
 )
 
 func TestClientRequest(t *testing.T) {
-	c := feather.NewClient()
+	pr, e := feather.Get("https://www.baidu.com")
 
-	pr, e := c.Get("https://www.baidu.com")
 	if e != nil {
 		t.Fatalf("request error %v", e)
 	}
