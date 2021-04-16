@@ -30,11 +30,11 @@ func defaultHandler(opt Options) Handler {
 func clientFromOptions(o Options) *http.Client {
 	var rt http.RoundTripper
 
-	if len(o.ProxyUrl) > 0 {
-		if o.ProxyUrl == NoneProxy {
+	if len(o.ProxyURL) > 0 {
+		if o.ProxyURL == NoneProxy {
 			rt = &http.Transport{}
 		} else {
-			pu, e := url.Parse(o.ProxyUrl)
+			pu, e := url.Parse(o.ProxyURL)
 			if e == nil {
 				rt = &http.Transport{
 					Proxy: http.ProxyURL(pu),
@@ -53,48 +53,66 @@ func clientFromOptions(o Options) *http.Client {
 type (
 	// RequestOptions simplified http request options
 	RequestOptions struct {
-		Body       io.Reader
-		Handler    Handler
-		Json       interface{}
-		Header     http.Header
+		// Body is raw request body
+		Body io.Reader
+		// Handler is request handler
+		Handler Handler
+		// Json body of request
+		Json interface{}
+		// Header is request header
+		Header http.Header
+		// FormParams is request form params
 		FormParams url.Values
-		Query      url.Values
+		// Query is request query
+		Query url.Values
 	}
+	// Client is request clinet
 	Client struct {
 		p   Pipeline
 		opt Options
 	}
+	// Options is request client options
 	Options struct {
-		BaseUri        string
-		Timeout        time.Duration
-		ProxyUrl       string
+		// BaseURI is prefix of request url
+		BaseURI string
+		// Timeout request timeout
+		Timeout time.Duration
+		// ProxyURL set proxy url for request
+		ProxyURL string
+		// ErrorUnsuccess trigger error if response is not ok
 		ErrorUnsuccess bool
 	}
 )
 
+// Get send GET http request
 func (c *Client) Get(url string, opts ...RequestOptions) (*PendingRequest, error) {
 	return c.Request(http.MethodGet, url, opts...)
 }
 
+// Post send POST http request
 func (c *Client) Post(url string, opts ...RequestOptions) (*PendingRequest, error) {
 	return c.Request(http.MethodPost, url, opts...)
 }
 
+// Put send PUT http request
 func (c *Client) Put(url string, opts ...RequestOptions) (*PendingRequest, error) {
 	return c.Request(http.MethodPut, url, opts...)
 }
 
+// Patch send PATCH http request
 func (c *Client) Patch(url string, opts ...RequestOptions) (*PendingRequest, error) {
 	return c.Request(http.MethodPatch, url, opts...)
 }
 
+// Delete send DELETE http request
 func (c *Client) Delete(url string, opts ...RequestOptions) (*PendingRequest, error) {
 	return c.Request(http.MethodDelete, url, opts...)
 }
 
+// Request send http request
 func (c *Client) Request(method, url string, opts ...RequestOptions) (*PendingRequest, error) {
-	if len(c.opt.BaseUri) > 0 {
-		url = fmt.Sprintf("%s/%s", strings.TrimSuffix(c.opt.BaseUri, "/"), strings.TrimPrefix(url, "/"))
+	if len(c.opt.BaseURI) > 0 {
+		url = fmt.Sprintf("%s/%s", strings.TrimSuffix(c.opt.BaseURI, "/"), strings.TrimPrefix(url, "/"))
 	}
 	o, err := requestOptions(c.opt, opts...)
 	if err != nil {
@@ -122,6 +140,7 @@ func (c *Client) Request(method, url string, opts ...RequestOptions) (*PendingRe
 	}).do(), nil
 }
 
+// NewRequestFromOptions new http request from RequestOptions
 func NewRequestFromOptions(method string, path string, o RequestOptions) (*http.Request, error) {
 	req, e := http.NewRequest(method, path, o.Body)
 	if e != nil {

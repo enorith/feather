@@ -20,7 +20,7 @@ func TestClientRequest(t *testing.T) {
 }
 
 func TestClientRequestProxy(t *testing.T) {
-	c := feather.NewClient(feather.Options{ProxyUrl: "http://127.0.0.1:7890"})
+	c := feather.NewClient(feather.Options{ProxyURL: "http://127.0.0.1:7890"})
 
 	pr, e := c.Get("https://www.google.com")
 	if e != nil {
@@ -41,7 +41,7 @@ type Result struct {
 }
 
 func TestClientUnmarshalBody(t *testing.T) {
-	c := feather.NewClient(feather.Options{ProxyUrl: feather.NoneProxy, BaseUri: "https://run.mocky.io/v3/"})
+	c := feather.NewClient(feather.Options{ProxyURL: feather.NoneProxy, BaseURI: "https://run.mocky.io/v3/"})
 
 	pr, e := c.Get("58744bd4-a1ec-4555-9078-1be561b07043")
 	if e != nil {
@@ -59,7 +59,7 @@ func TestClientUnmarshalBody(t *testing.T) {
 }
 
 func TestInterceptor1(t *testing.T) {
-	c := feather.NewClient(feather.Options{BaseUri: "https://run.mocky.io/v3/", ErrorUnsuccess: true})
+	c := feather.NewClient(feather.Options{BaseURI: "https://run.mocky.io/v3/", ErrorUnsuccess: true})
 
 	pr, e := c.Get("ed68fdb5-e9e9-4846-bb0f-f208e6820039")
 	if e != nil {
@@ -78,7 +78,7 @@ func TestInterceptor1(t *testing.T) {
 }
 
 func TestInterceptor2(t *testing.T) {
-	c := feather.NewClient(feather.Options{BaseUri: "https://run.mocky.io/v3/", ErrorUnsuccess: true})
+	c := feather.NewClient(feather.Options{BaseURI: "https://run.mocky.io/v3/", ErrorUnsuccess: true})
 
 	c.Interceptor(func(r *http.Request, next feather.Handler) *feather.Result {
 		t.Logf("request [%s](%s)", r.Method, r.URL)
