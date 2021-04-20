@@ -67,7 +67,7 @@ func (pr *PendingRequest) Then(cb interface{}) error {
 			}
 		}
 		if t.Kind() == reflect.Ptr {
-			unmarshalResponse(result.Response, cb, reflect.Value{})
+			unmarshalResponse(result, cb, reflect.Value{})
 		}
 	}
 
@@ -92,7 +92,8 @@ func (pr *PendingRequest) Wait() *Result {
 	} else {
 		pr.state = stateFailed
 	}
-	pr.container.WithInjector(&responseInjector{resp: pr.result.Response})
+
+	pr.container.WithInjector(&responseInjector{result: pr.result})
 
 	return pr.result
 }

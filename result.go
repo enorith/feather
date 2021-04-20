@@ -1,7 +1,9 @@
 package feather
 
 import (
+	"bytes"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -9,7 +11,7 @@ import (
 )
 
 type Result struct {
-	Response    *http.Response
+	*http.Response
 	Err         error
 	content     []byte
 	contentRead bool
@@ -19,12 +21,15 @@ func (r *Result) Content() []byte {
 	if r.contentRead {
 		return r.content
 	}
+	r.contentRead = true
 	if r.Err != nil {
 		return nil
 	}
 
-	b, _ := ioutil.ReadAll(r.Response.Body)
-	defer r.Response.Body.Close()
+	b, _ := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	r.Body = io.NopCloser(bytes.NewReader(b))
+
 	return b
 }
 

@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,6 +52,8 @@ func clientFromOptions(o Options) *http.Client {
 }
 
 type (
+	ProgressHandler func(now, total int64)
+
 	// RequestOptions simplified http request options
 	RequestOptions struct {
 		// Body is raw request body
@@ -65,6 +68,10 @@ type (
 		FormParams url.Values
 		// Query is request query
 		Query url.Values
+		// Method is request method
+		Method     string
+		OnProgress ProgressHandler
+		Sink       io.Writer
 	}
 	// Client is request clinet
 	Client struct {
@@ -79,8 +86,8 @@ type (
 		Timeout time.Duration
 		// ProxyURL set proxy url for request
 		ProxyURL string
-		// ErrorUnsuccess trigger error if response is not ok
-		ErrorUnsuccess bool
+		// HttpErrors trigger error if response is not ok
+		HttpErrors bool
 	}
 )
 
@@ -109,6 +116,11 @@ func (c *Client) Delete(url string, opts ...RequestOptions) (*PendingRequest, er
 	return c.Request(http.MethodDelete, url, opts...)
 }
 
+// Head send HEAD http request
+func (c *Client) Head(url string, opts ...RequestOptions) (*PendingRequest, error) {
+	return c.Request(http.MethodHead, url, opts...)
+}
+
 // Request send http request
 func (c *Client) Request(method, url string, opts ...RequestOptions) (*PendingRequest, error) {
 	if len(c.opt.BaseURI) > 0 {
@@ -123,17 +135,23 @@ func (c *Client) Request(method, url string, opts ...RequestOptions) (*PendingRe
 	if e != nil {
 		return nil, e
 	}
-	if c.opt.ErrorUnsuccess {
-		c.Interceptor(func(r *http.Request, next Handler) *Result {
-			result := next(r)
 
-			if result.Err == nil && result.Response.StatusCode != 200 {
-				result.Err = UnsuccessError{result}
-				return result
-			}
+	if o.Sink != nil {
+		var total int64
 
-			return result
-		})
+		resp, e := c.Head(url)
+		if e == nil {
+			resp.Then(func(res *Result) {
+				ls := res.Header.Get("Content-Length")
+				total, _ = strconv.ParseInt(ls, 10, 64)
+			})
+		}
+		pw := &progressWriter{o.OnProgress, total, 0}
+		c.Interceptor(sinkInterceptor(c, url, o.Sink, pw))
+	}
+
+	if c.opt.HttpErrors {
+		c.Interceptor(httpErrorInterceptor)
 	}
 	return newPendingRequest(req, func(r *http.Request) *Result {
 		return c.p.Resolve(r, o.Handler)
@@ -145,6 +163,9 @@ func NewRequestFromOptions(method string, path string, o RequestOptions) (*http.
 	req, e := http.NewRequest(method, path, o.Body)
 	if e != nil {
 		return nil, e
+	}
+	if o.Method != "" {
+		req.Method = o.Method
 	}
 
 	req.Header = mergeValues(req.Header, o.Header)
@@ -219,10 +240,10 @@ func mergeValues(val, val1 map[string][]string) map[string][]string {
 	return val
 }
 
-type UnsuccessError struct {
+type HttpError struct {
 	*Result
 }
 
-func (ue UnsuccessError) Error() string {
+func (ue HttpError) Error() string {
 	return http.StatusText(ue.Response.StatusCode)
 }
