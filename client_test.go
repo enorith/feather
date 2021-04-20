@@ -103,7 +103,7 @@ func TestInterceptor2(t *testing.T) {
 
 func TestDownloadFile(t *testing.T) {
 	file, _ := os.OpenFile("test_download.exe", os.O_CREATE|os.O_WRONLY, 0775)
-	c := feather.NewClient(feather.Options{ProxyURL: "http://127.0.0.1:7890"})
+	c := feather.NewClient()
 	c.Interceptor(requestLogger(t))
 
 	resp, e := c.Get("https://github.com/Fndroid/clash_for_windows_pkg/releases/download/0.15.3/Clash.for.Windows.Setup.0.15.3.exe", feather.RequestOptions{

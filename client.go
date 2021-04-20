@@ -69,9 +69,11 @@ type (
 		// Query is request query
 		Query url.Values
 		// Method is request method
-		Method     string
+		Method string
+		// OnProgress handle content download progress
 		OnProgress ProgressHandler
-		Sink       io.Writer
+		// Sink response content to io.Writer, for file download
+		Sink io.Writer
 	}
 	// Client is request clinet
 	Client struct {
