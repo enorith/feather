@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -74,6 +75,8 @@ type (
 		OnProgress ProgressHandler
 		// Sink response content to io.Writer, for file download
 		Sink io.Writer
+		// Upload file
+		Upload *UploadFile
 	}
 	// Client is request clinet
 	Client struct {
@@ -90,6 +93,11 @@ type (
 		ProxyURL string
 		// HttpErrors trigger error if response is not ok
 		HttpErrors bool
+	}
+
+	UploadFile struct {
+		key, filename string
+		file          io.Reader
 	}
 )
 
@@ -195,9 +203,42 @@ func requestOptions(co Options, opts ...RequestOptions) (RequestOptions, error) 
 		o.Handler = defaultHandler(co)
 	}
 
-	if o.FormParams != nil {
-		o.Body = strings.NewReader(o.FormParams.Encode())
-		o.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if o.Upload != nil {
+		bodyBuf := &bytes.Buffer{}
+		bodyWriter := multipart.NewWriter(bodyBuf)
+
+		fileWriter, err := bodyWriter.CreateFormFile(o.Upload.key, o.Upload.filename)
+		if err != nil {
+			fmt.Println("error writing to buffer")
+			return o, err
+		}
+
+		_, err = io.Copy(fileWriter, o.Upload.file)
+
+		if err != nil {
+			return o, err
+		}
+
+		contentType := bodyWriter.FormDataContentType()
+
+		err = bodyWriter.Close()
+		if err != nil {
+			return o, err
+		}
+
+		if o.FormParams != nil {
+			for k, vas := range o.FormParams {
+				bodyWriter.WriteField(k, vas[0])
+			}
+		}
+
+		o.Body = bodyBuf
+		o.Header.Set("Content-Type", contentType)
+	} else {
+		if o.FormParams != nil {
+			o.Body = strings.NewReader(o.FormParams.Encode())
+			o.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		}
 	}
 
 	if o.Json != nil {
@@ -248,4 +289,8 @@ type HttpError struct {
 
 func (ue HttpError) Error() string {
 	return http.StatusText(ue.Response.StatusCode)
+}
+
+func NewUploadFile(file io.Reader, key, filename string) *UploadFile {
+	return &UploadFile{key, filename, file}
 }

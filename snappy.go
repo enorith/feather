@@ -1,5 +1,7 @@
 package feather
 
+import "os"
+
 var DefaultClient *Client
 
 func Get(url string, opts ...RequestOptions) (*PendingRequest, error) {
@@ -24,6 +26,22 @@ func Delete(url string, opts ...RequestOptions) (*PendingRequest, error) {
 
 func Request(method, url string, opts ...RequestOptions) (*PendingRequest, error) {
 	return DefaultClient.Request(method, url, opts...)
+}
+
+func Download(url string, filename string, opts ...RequestOptions) (*PendingRequest, error) {
+	var opt RequestOptions
+	if len(opts) > 0 {
+		opt = opts[0]
+	}
+	file, e := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0775)
+
+	if e != nil {
+		return nil, e
+	}
+
+	opt.Sink = file
+
+	return Get(url, opt)
 }
 
 func init() {

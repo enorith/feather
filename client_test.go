@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/enorith/feather"
@@ -102,16 +103,15 @@ func TestInterceptor2(t *testing.T) {
 }
 
 func TestDownloadFile(t *testing.T) {
-	file, _ := os.OpenFile("test_download.exe", os.O_CREATE|os.O_WRONLY, 0775)
-	c := feather.NewClient()
-	c.Interceptor(requestLogger(t))
+	feather.DefaultClient.Interceptor(requestLogger(t))
 
-	resp, e := c.Get("https://github.com/Fndroid/clash_for_windows_pkg/releases/download/0.15.3/Clash.for.Windows.Setup.0.15.3.exe", feather.RequestOptions{
-		Sink: file,
-		OnProgress: func(now, total int64) {
-			fmt.Printf("\rdownloading: %.2f%%", float64(now)/float64(total)*100)
-		},
-	})
+	resp, e := feather.Download("https://dl.google.com/go/go1.16.3.linux-amd64.tar.gz",
+		"test_download.tar.gz", feather.RequestOptions{
+			OnProgress: func(now, total int64) {
+				p := float64(now) / float64(total) * 100
+				fmt.Printf("\rdownloading: [%s>%s] %.2f%%", strings.Repeat("=", int(p)), strings.Repeat(" ", 100-int(p)), p)
+			},
+		})
 
 	if e != nil {
 		t.Fatal(e)
@@ -120,9 +120,46 @@ func TestDownloadFile(t *testing.T) {
 	resp.Wait()
 }
 
+func TestUpload(t *testing.T) {
+	file, _ := os.Open("D:\\workspace\\jpeg.jpg")
+
+	resp, e := feather.NewClient(feather.Options{
+		HttpErrors: true,
+	}).Interceptor(requestLogger(t)).Post("http://127.0.0.1:8000/upload/image", feather.RequestOptions{
+		Upload: feather.NewUploadFile(file, "file", "upload2.jpg"),
+		Header: http.Header{
+			"Accept": {"application/json"},
+		},
+	})
+
+	if e != nil {
+		t.Fatal(e)
+	}
+
+	resp.Then(func(res *feather.Result) {
+
+		t.Log(res.ContentString())
+	})
+
+	resp.Catch(func(e error) {
+
+		var em ErrorMessage
+		e.(feather.HttpError).Unmarshal(&em)
+
+		t.Log(em)
+		t.Log(e.Error())
+	})
+
+}
+
 func requestLogger(t *testing.T) feather.PipeFunc {
 	return func(r *http.Request, next feather.Handler) *feather.Result {
 		t.Logf("request [%s](%s)", r.Method, r.URL)
 		return next(r)
 	}
+}
+
+type ErrorMessage struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }

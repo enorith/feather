@@ -22,13 +22,14 @@ func (r *Result) Content() []byte {
 		return r.content
 	}
 	r.contentRead = true
-	if r.Err != nil {
+	if r.Response == nil {
 		return nil
 	}
 
 	b, _ := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	r.Body = io.NopCloser(bytes.NewReader(b))
+	r.content = b
 
 	return b
 }
@@ -38,8 +39,8 @@ func (r *Result) ContentString() string {
 }
 
 func (r *Result) Unmarshal(v interface{}) error {
-	if r.Err != nil {
-		return errors.New("unmarshal error response")
+	if r.Response == nil {
+		return errors.New("unmarshal nil response")
 	}
 
 	return jsoniter.Unmarshal(r.Content(), v)
