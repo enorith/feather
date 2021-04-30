@@ -105,8 +105,8 @@ func TestInterceptor2(t *testing.T) {
 func TestDownloadFile(t *testing.T) {
 	feather.DefaultClient.Interceptor(requestLogger(t))
 
-	resp, e := feather.Download("https://dl.google.com/go/go1.16.3.linux-amd64.tar.gz",
-		"test_download.tar.gz", feather.RequestOptions{
+	resp, e := feather.Download("https://www.baidu.com",
+		"test_download.html", feather.RequestOptions{
 			OnProgress: func(now, total int64) {
 				p := float64(now) / float64(total) * 100
 				fmt.Printf("\rdownloading: [%s>%s] %.2f%%", strings.Repeat("=", int(p)), strings.Repeat(" ", 100-int(p)), p)
@@ -139,14 +139,13 @@ func TestUpload(t *testing.T) {
 	resp.Then(func(res *feather.Result) {
 
 		t.Log(res.ContentString())
-	})
+	}).Catch(func(e error) {
+		if err, ok := e.(feather.HttpError); ok {
+			var em ErrorMessage
+			err.Unmarshal(&em)
+			t.Log(em)
+		}
 
-	resp.Catch(func(e error) {
-
-		var em ErrorMessage
-		e.(feather.HttpError).Unmarshal(&em)
-
-		t.Log(em)
 		t.Log(e.Error())
 	})
 

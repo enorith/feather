@@ -56,14 +56,14 @@ func (pr *PendingRequest) do() *PendingRequest {
 	return pr
 }
 
-func (pr *PendingRequest) Then(cb interface{}) error {
+func (pr *PendingRequest) Then(cb interface{}) *PendingRequest {
 	result := pr.Wait()
 	if result.Err == nil {
 		t := reflect.TypeOf(cb)
 		if t.Kind() == reflect.Func {
 			_, e := pr.container.Invoke(cb)
 			if e != nil {
-				return e
+				return pr
 			}
 		}
 		if t.Kind() == reflect.Ptr {
@@ -71,7 +71,7 @@ func (pr *PendingRequest) Then(cb interface{}) error {
 		}
 	}
 
-	return result.Err
+	return pr
 }
 
 func (pr *PendingRequest) Catch(cb ErrorHandler) {

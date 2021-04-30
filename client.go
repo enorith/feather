@@ -131,6 +131,16 @@ func (c *Client) Head(url string, opts ...RequestOptions) (*PendingRequest, erro
 	return c.Request(http.MethodHead, url, opts...)
 }
 
+// SyncRequest send sync http request
+func (c *Client) SyncRequest(method, url string, opts ...RequestOptions) (*Result, error) {
+	req, e := c.Request(method, url, opts...)
+	if e != nil {
+		return nil, e
+	}
+
+	return req.Wait(), nil
+}
+
 // Request send http request
 func (c *Client) Request(method, url string, opts ...RequestOptions) (*PendingRequest, error) {
 	if len(c.opt.BaseURI) > 0 {
