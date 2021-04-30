@@ -52,6 +52,7 @@ client.Interceptor(requestLogger(logger.Default()))
 
 ```golang
 type Response struct {
+	*feather.Result
     Code int `json:"code"`
     Message string `json:"message"`
 }
