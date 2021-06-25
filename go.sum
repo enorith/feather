@@ -1,8 +1,8 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/enorith/container v0.0.1 h1:Z7nx4fLK8Poj+gvE/rhEnd6TB1I9H2aOWujc45CcoDg=
-github.com/enorith/container v0.0.1/go.mod h1:qGItKkY9KIkkYkIUyywuaCYa8pfo40HyT66XGwzlNQE=
+github.com/enorith/container v0.0.3 h1:jc5MpFqj+HJeoOQWgilRC36+vNig91a6Cq5LX0l0PQ0=
+github.com/enorith/container v0.0.3/go.mod h1:qGItKkY9KIkkYkIUyywuaCYa8pfo40HyT66XGwzlNQE=
 github.com/enorith/supports v0.0.5 h1:iE5FvjRt5LNADaR/EWESGoKEpPanxW3rFH9eCWTtoAM=
 github.com/enorith/supports v0.0.5/go.mod h1:arD7UoIt8BKSkZINkCQmKQjE1sW1BbJugDc+mKuFtyk=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
