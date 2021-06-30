@@ -252,11 +252,18 @@ func requestOptions(co Options, opts ...RequestOptions) (RequestOptions, error) 
 	}
 
 	if o.Json != nil {
-		b, e := jsoniter.Marshal(o.Json)
-		if e != nil {
-			return o, e
+		if r, ok := o.Json.(io.Reader); ok {
+			o.Body = r
+		} else if b, ok := o.Json.([]byte); ok {
+			o.Body = bytes.NewReader(b)
+		} else {
+			b, e := jsoniter.Marshal(o.Json)
+			if e != nil {
+				return o, e
+			}
+			o.Body = bytes.NewReader(b)
 		}
-		o.Body = bytes.NewReader(b)
+
 		o.Header.Set("Content-Type", "application/json")
 	}
 
