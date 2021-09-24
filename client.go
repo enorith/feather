@@ -189,7 +189,7 @@ func NewRequestFromOptions(method string, path string, o RequestOptions) (*http.
 	}
 
 	req.Header = mergeValues(req.Header, o.Header)
-	req.Form = mergeValues(req.Header, o.FormParams)
+	req.Form = mergeValues(req.Form, o.FormParams)
 	var values url.Values
 	values = mergeValues(values, o.Query)
 	req.URL.RawQuery = values.Encode()

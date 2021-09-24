@@ -3,6 +3,7 @@ package feather_test
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -85,7 +86,11 @@ func TestInterceptor2(t *testing.T) {
 
 	c.Interceptor(requestLogger(t))
 
-	pr, e := c.Get("58744bd4-a1ec-4555-9078-1be561b07043")
+	pr, e := c.Get("58744bd4-a1ec-4555-9078-1be561b07043", feather.RequestOptions{
+		FormParams: url.Values{
+			"foo": {"bar"},
+		},
+	})
 	if e != nil {
 		t.Fatalf("request error %v", e)
 	}
@@ -153,7 +158,7 @@ func TestUpload(t *testing.T) {
 
 func requestLogger(t *testing.T) feather.PipeFunc {
 	return func(r *http.Request, next feather.Handler) *feather.Result {
-		t.Logf("request [%s](%s)", r.Method, r.URL)
+		t.Logf("request [%s](%s), [%v]", r.Method, r.URL, r.Header)
 		return next(r)
 	}
 }
