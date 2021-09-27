@@ -110,8 +110,8 @@ func TestInterceptor2(t *testing.T) {
 func TestDownloadFile(t *testing.T) {
 	feather.DefaultClient.Interceptor(requestLogger(t))
 
-	resp, e := feather.Download("https://www.baidu.com",
-		"test_download.html", feather.RequestOptions{
+	resp, e := feather.Download("https://github.com/Fndroid/clash_for_windows_pkg/releases/download/0.18.2/Clash.for.Windows-0.18.2-mac.7z",
+		"test_download.zip", feather.RequestOptions{
 			OnProgress: func(now, total int64) {
 				p := float64(now) / float64(total) * 100
 				fmt.Printf("\rdownloading: [%s>%s] %.2f%%", strings.Repeat("=", int(p)), strings.Repeat(" ", 100-int(p)), p)

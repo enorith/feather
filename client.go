@@ -156,25 +156,28 @@ func (c *Client) Request(method, url string, opts ...RequestOptions) (*PendingRe
 		return nil, e
 	}
 
-	if o.Sink != nil {
-		var total int64
-
-		resp, e := c.Head(url)
-		if e == nil {
-			resp.Then(func(res *Result) {
-				ls := res.Header.Get("Content-Length")
-				total, _ = strconv.ParseInt(ls, 10, 64)
-			})
-		}
-		pw := &progressWriter{o.OnProgress, total, 0}
-		c.Interceptor(sinkInterceptor(c, url, o.Sink, pw))
-	}
-
 	if c.opt.HttpErrors {
 		c.Interceptor(httpErrorInterceptor)
 	}
+
 	return newPendingRequest(req, func(r *http.Request) *Result {
-		return c.p.Resolve(r, o.Handler)
+		result := c.p.Resolve(r, o.Handler)
+		if o.Sink != nil && result.Err == nil {
+			var total int64
+
+			resp, e := c.Head(url)
+			if e == nil {
+				resp.Then(func(res *Result) {
+					ls := res.Header.Get("Content-Length")
+					total, _ = strconv.ParseInt(ls, 10, 64)
+				})
+			}
+			pw := &progressWriter{o.OnProgress, total, 0}
+			defer result.Body.Close()
+			io.Copy(o.Sink, io.TeeReader(result.Body, pw))
+		}
+
+		return result
 	}).do(), nil
 }
 

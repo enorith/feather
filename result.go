@@ -45,3 +45,20 @@ func (r *Result) Unmarshal(v interface{}) error {
 
 	return jsoniter.Unmarshal(r.Content(), v)
 }
+
+type progressWriter struct {
+	onProgress ProgressHandler
+	total      int64
+	current    int64
+}
+
+func (pw *progressWriter) Write(p []byte) (int, error) {
+	l := len(p)
+	pw.current += int64(l)
+
+	if pw.onProgress != nil {
+		pw.onProgress(pw.current, pw.total)
+	}
+
+	return l, nil
+}
