@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/enorith/feather"
 )
@@ -108,7 +109,9 @@ func TestInterceptor2(t *testing.T) {
 }
 
 func TestDownloadFile(t *testing.T) {
+	feather.DefaultTimeout = 10 * time.Minute
 	feather.DefaultClient.Interceptor(requestLogger(t))
+	os.Setenv("HTTPS_PROXY", "http://127.0.0.1:7890")
 
 	resp, e := feather.Download("https://github.com/Fndroid/clash_for_windows_pkg/releases/download/0.18.2/Clash.for.Windows-0.18.2-mac.7z",
 		"test_download.zip", feather.RequestOptions{
@@ -122,7 +125,10 @@ func TestDownloadFile(t *testing.T) {
 		t.Fatal(e)
 	}
 
-	resp.Wait()
+	e = resp.Wait().Err
+	if e != nil {
+		t.Fatal(e)
+	}
 }
 
 func TestUpload(t *testing.T) {
@@ -154,6 +160,23 @@ func TestUpload(t *testing.T) {
 		t.Log(e.Error())
 	})
 
+}
+
+func TestMergeRo(t *testing.T) {
+	ro := feather.MergeRequestOptions(feather.RequestOptions{
+		Query: url.Values{
+			"foo": {"bar"},
+		},
+	}, feather.RequestOptions{
+		Header: http.Header{
+			"bz": {"vv"},
+		},
+	}, feather.RequestOptions{
+		FormParams: url.Values{
+			"name": {"job"},
+		},
+	})
+	t.Log(ro.Query, ro.Header, ro.FormParams)
 }
 
 func requestLogger(t *testing.T) feather.PipeFunc {

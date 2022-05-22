@@ -45,5 +45,7 @@ func Download(url string, filename string, opts ...RequestOptions) (*PendingRequ
 }
 
 func init() {
-	DefaultClient = NewClient()
+	DefaultClient = NewClient(Options{
+		Timeout: DefaultTimeout,
+	})
 }

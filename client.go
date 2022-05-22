@@ -14,9 +14,10 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
+var DefaultTimeout = 30 * time.Second
+
 const (
-	DefaultTimeout = 5 * time.Second
-	NoneProxy      = "none"
+	NoneProxy = "none"
 )
 
 func defaultHandler(opt Options) Handler {
@@ -201,16 +202,7 @@ func NewRequestFromOptions(method string, path string, o RequestOptions) (*http.
 }
 
 func requestOptions(co Options, opts ...RequestOptions) (RequestOptions, error) {
-	var o RequestOptions
-	if len(opts) > 0 {
-		o = opts[0]
-	}
-	if o.Header == nil {
-		o.Header = make(http.Header)
-	}
-	if o.Query == nil {
-		o.Query = make(url.Values)
-	}
+	o := MergeRequestOptions(opts...)
 
 	if o.Handler == nil {
 		o.Handler = defaultHandler(co)
