@@ -32,17 +32,15 @@ func defaultHandler(opt Options) Handler {
 }
 
 func clientFromOptions(o Options) *http.Client {
-	var rt *http.Transport
+	rt := http.DefaultTransport.(*http.Transport).Clone()
 
 	if len(o.ProxyURL) > 0 {
 		if o.ProxyURL == NoneProxy {
-			rt = &http.Transport{}
+			rt.Proxy = nil
 		} else {
 			pu, e := url.Parse(o.ProxyURL)
 			if e == nil {
-				rt = &http.Transport{
-					Proxy: http.ProxyURL(pu),
-				}
+				rt.Proxy = http.ProxyURL(pu)
 			}
 		}
 	}
