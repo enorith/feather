@@ -2,6 +2,7 @@ package feather
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -31,7 +32,7 @@ func defaultHandler(opt Options) Handler {
 }
 
 func clientFromOptions(o Options) *http.Client {
-	var rt http.RoundTripper
+	var rt *http.Transport
 
 	if len(o.ProxyURL) > 0 {
 		if o.ProxyURL == NoneProxy {
@@ -44,7 +45,15 @@ func clientFromOptions(o Options) *http.Client {
 				}
 			}
 		}
+	}
 
+	if o.SkipVerifyTLS {
+		if rt == nil {
+			rt = &http.Transport{}
+		}
+		rt.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
 	}
 
 	return &http.Client{
@@ -94,6 +103,8 @@ type (
 		ProxyURL string
 		// HttpErrors trigger error if response is not ok
 		HttpErrors bool
+
+		SkipVerifyTLS bool
 	}
 
 	UploadFile struct {
