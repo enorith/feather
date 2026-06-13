@@ -53,10 +53,17 @@ func clientFromOptions(o Options) *http.Client {
 			InsecureSkipVerify: true,
 		}
 	}
+	var checkRed func(req *http.Request, via []*http.Request) error
+	if o.NoTrace {
+		checkRed = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+	}
 
 	return &http.Client{
-		Timeout:   o.Timeout,
-		Transport: rt,
+		Timeout:       o.Timeout,
+		Transport:     rt,
+		CheckRedirect: checkRed,
 	}
 }
 
@@ -103,6 +110,8 @@ type (
 		HttpErrors bool
 
 		SkipVerifyTLS bool
+
+		NoTrace bool
 	}
 
 	UploadFile struct {
